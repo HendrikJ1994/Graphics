@@ -369,29 +369,31 @@ void defaultcolor(Mesh& m) {
 }
 
 void connectTriangles(Mesh& m) {
-	vector<vector<int>> copy_triangles = vertexNeighborsOfVertices;
-	vector<vector<int>> copy_vertices = triangleNeighborsOfVertices;
-	//vector<int> StillToDo;
+	vector<vector<int>> connected;
 	vector<int> alreadyDone;
-
-	//StillToDo.resize(0);
-	alreadyDone.resize(0);
-
+	vector<int> StillToDo;
 	int currentVertex = 0;
-	//StillToDo.push_back(currentVertex);
 
-	while (copy_triangles.size() != 0) {
-		for (unsigned int i = 0; i < copy_triangles[currentVertex].size(); ++i) {
-			connectedTriangles.push_back(copy_triangles[currentVertex][i]);
+	connected.resize(0);
+
+	for (int i = 0; i < vertexNeighborsOfVertices.size(); ++i) {
+		for (int j = 0; j < triangleNeighborsOfVertices.size(); ++j) {
+			if (connected.size() == 0) {
+				connected[0].push_back(triangleNeighborsOfVertices[i][j]);
+			}
+			else {
+				for (int k = 0; k < connected.size(); ++k) {
+					for (int l = 0; l < connected[k].size(); ++l) {
+						if (listCheck(connected[k], triangleNeighborsOfVertices[i][j]) == 0) {
+
+						}
+					}
+				}
+			}
 		}
-		for (unsigned int i = 0; i < copy_triangles[currentVertex][i]; ++i) {
-			copy_triangles.erase(i)
-
-		}
-
-
 	}
-	
+
+
 
 	//while (StillToDo.size() != 0) {
 	//	currentVertex = StillToDo[0];
@@ -413,6 +415,60 @@ void connectTriangles(Mesh& m) {
 	//	StillToDo.erase(StillToDo.begin());
 	//}
 	//cout << "quit while loop" << endl;
+
+	
+	/*for (unsigned int i = 0; i < triangleNeighborsOfVertices.size(); ++i) {
+		for (unsigned int j = 0; j < triangleNeighborsOfVertices[i].size(); ++j) {
+			alreadyDone.push_back(triangleNeighborsOfVertices[i][j]);
+			
+			connected[i].push_back(triangleNeighborsOfVertices[i][j]);
+
+		}
+	}*/
+
+	
+	//vector<vector<int>> copy_vertexNeighborsOfVertices = vertexNeighborsOfVertices;
+	//vector<vector<int>> copy_triangleNeighborsOfVertices = triangleNeighborsOfVertices;
+	////vector<int> StillToDo;
+	//vector<int> justDone;
+
+	////StillToDo.resize(0);
+	//
+
+	//int currentVertex = 0;
+	////StillToDo.push_back(currentVertex);
+	////justDone.push_back(4);
+	///*for (int j = justDone.size()-1; j >= 0; --j) {
+	//	cout << justDone[j]<< endl;
+	//}*/
+	/////////////////////////////////////////////////////////////////
+
+	//////////////////////////////////////////////////////////////
+	//while (copy_vertexNeighborsOfVertices.size() != 0) {
+	//	justDone.resize(0);
+	//	for (unsigned int h = 0; h < copy_vertexNeighborsOfVertices[currentVertex].size(); ++h) {
+	//		for (unsigned int i = 0; i < copy_vertexNeighborsOfVertices[currentVertex].size(); ++i) {
+	//			connectedTriangles.push_back(copy_vertexNeighborsOfVertices[currentVertex][i]);
+	//			justDone.push_back(copy_vertexNeighborsOfVertices[currentVertex][i]);
+	//		}
+
+	//		for (unsigned int i = 0; i < copy_vertexNeighborsOfVertices[currentVertex].size(); ++i) { //loop through all the neighbors vertices of the last added vertex
+	//			int vertexneighborIndex = copy_vertexNeighborsOfVertices[currentVertex][i];
+	//			copy_triangleNeighborsOfVertices[vertexneighborIndex].begin();
+	//			for (unsigned int j = 0; j < justDone.size(); ++j) {// loop through all te triangles connected to the neighbor vertex
+	//				if (listCheck(copy_triangleNeighborsOfVertices[vertexneighborIndex], justDone[j]) == 1) {
+	//					copy_triangleNeighborsOfVertices[vertexneighborIndex].erase(copy_triangleNeighborsOfVertices[vertexneighborIndex].begin() + j);
+	//				}
+	//				//				if(copy_triangleNeighborsOfVertices[copy_vertexNeighborsOfVertices[i][j]]==
+	//			}
+	//		}
+	//		//currentVertex = copy_vertexNeighborsOfVertices[currentVertex][h];
+	//	}
+	//}
+
+
+
+	
 }
 
 int listCheck(vector<int> checklist, int toBeChecked) {
