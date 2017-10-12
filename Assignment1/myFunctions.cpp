@@ -59,7 +59,6 @@ void getConnectedComponents(Mesh& m);
 void addToComponent(vector<int>& new_component, vector<int>& alreadyDone, int vertex);
 void colorComponents(Mesh& m);
 int checkForDoubles(int needcheck, int v);
-int listCheck(vector<int> checklist, int toBeChecked);
 
 
 int draw_triangle_centers = 0;
@@ -84,7 +83,17 @@ void myFunction2(Mesh& m) {
 
 /** Function that gets called on keypress 3 */
 void myFunction3(Mesh& m) {
+	//if (color_triangles == 1) {
+	//	colorTriangles(m);
+	//}
+	//else if (color_components == 1) {
+	//	colorComponents(m);
+	//}
+	//else {
+	//	defaultcolor(m);
+	//}
 	color_triangles = 1 - color_triangles;
+	//color_components = 0;
 	glutPostRedisplay();
 
 }
@@ -98,7 +107,17 @@ void myFunction4(Mesh& m) {
 
 /** Function that gets called on keypress 5 */
 void myFunction5(Mesh& m) {
+	//if (color_components == 1) {
+	//	colorComponents(m);
+	//}
+	//else if (color_triangles == 1) {
+	//	colorTriangles(m);
+	//}
+	//else {
+	//	defaultcolor(m);
+	//}
 	color_components = 1 - color_components;
+	color_triangles = 0;
 	glutPostRedisplay();
 }
 
@@ -115,13 +134,17 @@ void draw(Mesh& m) {
 		getTriangleNeighboursOfVertices(m);
 		getVertexNeighboursOfVertices(m);
 		getConnectedComponents(m);
-	}
-
-	if (color_triangles == 0) {
 		defaultcolor(m);
 	}
-	if (color_triangles == 1) {
+
+	if (color_triangles == 0 && color_components==0) {
+		defaultcolor(m);
+	}
+	if (color_triangles == 1 && color_components==0) {
 		colorTriangles(m);
+	}
+	if (color_components == 1 && color_triangles==0) {
+		colorComponents(m);
 	}
 	
 	m.drawWithColors(colors);
@@ -138,9 +161,7 @@ void draw(Mesh& m) {
 	if (draw_vertex_normals == 1) {
 		drawVertexNormals(m);
 	}
-	if (color_components == 1) {
-		colorComponents(m);
-	}
+	
 
 }
 
@@ -197,7 +218,7 @@ void drawMiddleLine(Mesh& m) {
 
 		Vec3Df normal = Vec3Df::crossProduct(p0 - p1, p0 - p2);
 		normal.normalize();
-		Vec3Df endPoint = middlePoint + normal * 0.03f;
+		Vec3Df endPoint = middlePoint + normal * 0.3f;
 
 		glVertex3f(endPoint[0], endPoint[1], endPoint[2]);
 	}
@@ -286,7 +307,7 @@ void drawVertexNormals(Mesh& m) {
 		normalVertex.normalize();
 
 		glVertex3f(m.vertices[i].p[0], m.vertices[i].p[1], m.vertices[i].p[2]);
-		Vec3Df endPoint = m.vertices[i].p + normalVertex*0.03f;
+		Vec3Df endPoint = m.vertices[i].p + normalVertex*0.3f;
 
 		glVertex3f(endPoint[0], endPoint[1], endPoint[2]);
 	}
@@ -318,9 +339,7 @@ void getVertexNeighboursOfVertices(Mesh& m) {
 			int checkv0 = checkForDoubles(v0, i);
 			int checkv1 = checkForDoubles(v1, i);
 			int checkv2 = checkForDoubles(v2, i);
-			//cout << "v1 = " << v1 << "v2 = " << v2 << "v0 = " << v0 << endl;
-			//cout << checkv0 << checkv1 << checkv2 << endl;
-			// 1 van v0,1,2 == j, dus andere 2 toevoegen aan vector, maar dan krijg je dubbele dingen dus checken of degene die toegevoegd word er al in zit.
+			
 			if (i == v0) {
 				if (checkv1 == 0) {
 					vertexNeighborsOfVertices[i].push_back(v1);
@@ -365,56 +384,55 @@ int checkForDoubles(int needcheck, int v) {
 			else check = 0;
 		}
 	}
-
 	return check;
 }
  
 void defaultcolor(Mesh& m) {
 	colors.resize(0);
 	Vec3Df new_color = Vec3Df(1.0f, 1.0f, 1.0f);
-		for (unsigned int i = 0; i < m.vertices.size(); ++i) {
-			colors.push_back(new_color);
-		}
+	for (unsigned int i = 0; i < m.vertices.size(); ++i) {
+		colors.push_back(new_color);
+	}
 }
 
 void getConnectedComponents(Mesh& m) {
-	//vector<vector<int>> connected;
-	//vector<int> Components;
 	vector<int> newComponent;
 	vector<int> alreadyDone;
-	//vector<int> StillToDo;
-	int currentVertex = 0;
 
 	alreadyDone.resize(m.vertices.size());
 	newComponent.resize(m.vertices.size());
 	fill(alreadyDone.begin(), alreadyDone.end(), 0);
 
-	for (unsigned int i = 0; i < m.vertices.size(); ++i) {
+	for (int i = 0; i < m.vertices.size(); i++) {
 		if (alreadyDone[i] == 0) {
 			fill(newComponent.begin(), newComponent.end(), 0);
 			addToComponent(newComponent, alreadyDone, i);
 			Components.push_back(newComponent);
 		}
+		else continue;
 	}
-
-	for (unsigned int i = 0; i < Components.size(); ++i) {
+	
+	for (int i = 0; i < Components.size(); i++) {
 		Components[i] = simplifyComponents(Components[i]);
 	}
 }
 
 vector<int> simplifyComponents(vector<int>& component) {
-	vector<int> newComponent;
+	vector<int> addComponent;
+	addComponent.resize(0);
+
 	for (unsigned int i = 0; i < component.size(); ++i) {
-		if (component[i] == 0) {
-			newComponent.push_back(i);
+		if (component[i] == 1) {
+			addComponent.push_back(i);
 		}
 	}
-	return newComponent;
+	return addComponent;
 }
 
 void addToComponent(vector<int>& Component, vector<int>& alreadyDone, int vertex) {
 	Component[vertex] = 1;
 	alreadyDone[vertex] = 1;
+
 	for (unsigned int i = 0; i < vertexNeighborsOfVertices[vertex].size(); ++i) {
 		if (Component[vertexNeighborsOfVertices[vertex][i]] == 0) {
 			addToComponent(Component, alreadyDone, vertexNeighborsOfVertices[vertex][i]);
@@ -422,127 +440,42 @@ void addToComponent(vector<int>& Component, vector<int>& alreadyDone, int vertex
 	}
 }
 
-
-
-
-
-
-	
-	
-	
-
-
-
-	//while (StillToDo.size() != 0) {
-	//	currentVertex = StillToDo[0];
-	//	for (unsigned int i = 0; i < triangleNeighborsOfVertices[currentVertex].size(); ++i) {
-	//		// checken of the triangle er al in connectedTriangles zit
-	//		//needs to be checked for multiple times the same triangle
-	//		if (listCheck(connectedTriangles, triangleNeighborsOfVertices[currentVertex][i]) == 0) {
-	//			connectedTriangles.push_back(triangleNeighborsOfVertices[currentVertex][i]);
-	//		}
-	//	}
-	//	//needs to be checked if the vertex alrealy has been done
-	//	for (unsigned int j = 0; j < vertexNeighborsOfVertices[currentVertex].size(); ++j) {
-	//		if (listCheck(alreadyDone, vertexNeighborsOfVertices[currentVertex][j]) == 0) {
-	//			StillToDo.push_back(vertexNeighborsOfVertices[currentVertex][j]);
-	//		}
-	//		else continue;
-	//	}
-	//	alreadyDone.push_back(StillToDo[0]);
-	//	StillToDo.erase(StillToDo.begin());
-	//}
-	//cout << "quit while loop" << endl;
-
-	
-	/*for (unsigned int i = 0; i < triangleNeighborsOfVertices.size(); ++i) {
-		for (unsigned int j = 0; j < triangleNeighborsOfVertices[i].size(); ++j) {
-			alreadyDone.push_back(triangleNeighborsOfVertices[i][j]);
-			
-			connected[i].push_back(triangleNeighborsOfVertices[i][j]);
-
-		}
-	}*/
-
-	
-	//vector<vector<int>> copy_vertexNeighborsOfVertices = vertexNeighborsOfVertices;
-	//vector<vector<int>> copy_triangleNeighborsOfVertices = triangleNeighborsOfVertices;
-	////vector<int> StillToDo;
-	//vector<int> justDone;
-
-	////StillToDo.resize(0);
-	//
-
-	//int currentVertex = 0;
-	////StillToDo.push_back(currentVertex);
-	////justDone.push_back(4);
-	///*for (int j = justDone.size()-1; j >= 0; --j) {
-	//	cout << justDone[j]<< endl;
-	//}*/
-	/////////////////////////////////////////////////////////////////
-
-	//////////////////////////////////////////////////////////////
-	//while (copy_vertexNeighborsOfVertices.size() != 0) {
-	//	justDone.resize(0);
-	//	for (unsigned int h = 0; h < copy_vertexNeighborsOfVertices[currentVertex].size(); ++h) {
-	//		for (unsigned int i = 0; i < copy_vertexNeighborsOfVertices[currentVertex].size(); ++i) {
-	//			connectedTriangles.push_back(copy_vertexNeighborsOfVertices[currentVertex][i]);
-	//			justDone.push_back(copy_vertexNeighborsOfVertices[currentVertex][i]);
-	//		}
-
-	//		for (unsigned int i = 0; i < copy_vertexNeighborsOfVertices[currentVertex].size(); ++i) { //loop through all the neighbors vertices of the last added vertex
-	//			int vertexneighborIndex = copy_vertexNeighborsOfVertices[currentVertex][i];
-	//			copy_triangleNeighborsOfVertices[vertexneighborIndex].begin();
-	//			for (unsigned int j = 0; j < justDone.size(); ++j) {// loop through all te triangles connected to the neighbor vertex
-	//				if (listCheck(copy_triangleNeighborsOfVertices[vertexneighborIndex], justDone[j]) == 1) {
-	//					copy_triangleNeighborsOfVertices[vertexneighborIndex].erase(copy_triangleNeighborsOfVertices[vertexneighborIndex].begin() + j);
-	//				}
-	//				//				if(copy_triangleNeighborsOfVertices[copy_vertexNeighborsOfVertices[i][j]]==
-	//			}
-	//		}
-	//		//currentVertex = copy_vertexNeighborsOfVertices[currentVertex][h];
-	//	}
-	//}
-
-
-
-	
-
-
-int listCheck(vector<int> checklist, int toBeChecked) {
-	int check = 0;
-	for (unsigned int i = 0; i < checklist.size(); i++) {
-		if (checklist[i] == toBeChecked) {
-			check = 1;
-		}
-		else continue;
-	}
-	return check;
-}
+//int listCheck(vector<int> checklist, int toBeChecked) {
+//	int check = 0;
+//	for (unsigned int i = 0; i < checklist.size(); i++) {
+//		if (checklist[i] == toBeChecked) {
+//			check = 1;
+//		}
+//		else continue;
+//	}
+//	return check;
+//}
 
 void colorComponents(Mesh& m) {
-	int nrOfComponent = 0;
-	fill(colors.begin(), colors.end(), 0);
+	Vec3Df newcolor;
+	int a;
+
 	for (unsigned int i = 0; i <Components.size(); ++i) {
-		if (unsigned int j = 0; j < Components[i].size(); ++j) {
-			if ((nrOfComponent+1)%6 == 0) {
-				colors[Components[i][j]] = (1, 0, 0);
+		for (unsigned int j = 0; j < Components[i].size(); ++j) {
+			if (i % 6 == 0) {
+				newcolor = Vec3Df(1.0f, 0.0f, 0.0f);
 			}
-			else if ((nrOfComponent + 1) % 6 == 1) {
-				colors[Components[i][j]] = (1, 0, 0);
+			else if (i % 6 == 1) {
+				newcolor= Vec3Df(0.0f, 1.0f, 0.0f);
 			}
-			else if ((nrOfComponent + 1) % 6 == 2) {
-				colors[Components[i][j]] = (1, 0, 0);
+			else if (i % 6 == 2) {
+				newcolor = Vec3Df(0.0f, 0.0f, 1.0f);
 			}
-			else if ((nrOfComponent + 1) % 6 == 3) {
-				colors[Components[i][j]] = (1, 0, 0);
+			else if (i % 6 == 3) {
+				newcolor = Vec3Df(1.0f, 1.0f, 0.0f);
 			}
-			else if ((nrOfComponent + 1) % 6 == 4) {
-				colors[Components[i][j]] = (1, 0, 0);
+			else if (i % 6 == 4) {
+				newcolor = Vec3Df(0.0f, 1.0f, 1.0f);
 			}
 			else {
-				colors[Components[i][j]] = (1, 0, 0);
+				newcolor = Vec3Df(1.0f, 0.0f, 1.0f);
 			}
+			colors[Components[i][j]] = newcolor;
 		}
 	}
 }
