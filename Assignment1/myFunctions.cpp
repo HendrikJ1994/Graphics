@@ -44,8 +44,10 @@ vector<Vec3Df> colors;
 
 vector<vector<int> > triangleNeighborsOfVertices;
 vector<vector<int> > vertexNeighborsOfVertices;
-vector<int> connectedTriangles;
+vector<vector<int>> Components;
 
+
+vector<int> simplifyComponents(vector<int>& component);
 void drawCenters(Mesh& m);
 void drawMiddleLine(Mesh& m);
 void colorTriangles(Mesh& m);
@@ -53,7 +55,9 @@ void defaultcolor(Mesh& m);
 void getTriangleNeighboursOfVertices(Mesh& m);
 void drawVertexNormals(Mesh& m);
 void getVertexNeighboursOfVertices(Mesh& m);
-void connectTriangles(Mesh& m);
+void getConnectedComponents(Mesh& m);
+void addToComponent(vector<int>& new_component, vector<int>& alreadyDone, int vertex);
+void colorComponents(Mesh& m);
 int checkForDoubles(int needcheck, int v);
 int listCheck(vector<int> checklist, int toBeChecked);
 
@@ -62,6 +66,7 @@ int draw_triangle_centers = 0;
 int draw_middle_lines = 0;
 int color_triangles = 0;
 int draw_vertex_normals = 0;
+int color_components = 0;
 
 /** Function that gets called on keypress 1 */
 void myFunction1(Mesh& m) {
@@ -93,7 +98,8 @@ void myFunction4(Mesh& m) {
 
 /** Function that gets called on keypress 5 */
 void myFunction5(Mesh& m) {
-
+	color_components = 1 - color_components;
+	glutPostRedisplay();
 }
 
 /** Gets called once the mesh has to be drawn.
@@ -108,7 +114,7 @@ void draw(Mesh& m) {
 		firstTimeDrawing = 1;
 		getTriangleNeighboursOfVertices(m);
 		getVertexNeighboursOfVertices(m);
-		connectTriangles(m);
+		getConnectedComponents(m);
 	}
 
 	if (color_triangles == 0) {
@@ -131,6 +137,9 @@ void draw(Mesh& m) {
 	}
 	if (draw_vertex_normals == 1) {
 		drawVertexNormals(m);
+	}
+	if (color_components == 1) {
+		colorComponents(m);
 	}
 
 }
@@ -368,30 +377,59 @@ void defaultcolor(Mesh& m) {
 		}
 }
 
-void connectTriangles(Mesh& m) {
-	vector<vector<int>> connected;
+void getConnectedComponents(Mesh& m) {
+	//vector<vector<int>> connected;
+	//vector<int> Components;
+	vector<int> newComponent;
 	vector<int> alreadyDone;
-	vector<int> StillToDo;
+	//vector<int> StillToDo;
 	int currentVertex = 0;
 
-	connected.resize(0);
+	alreadyDone.resize(m.vertices.size());
+	newComponent.resize(m.vertices.size());
+	fill(alreadyDone.begin(), alreadyDone.end(), 0);
 
-	for (int i = 0; i < vertexNeighborsOfVertices.size(); ++i) {
-		for (int j = 0; j < triangleNeighborsOfVertices.size(); ++j) {
-			if (connected.size() == 0) {
-				connected[0].push_back(triangleNeighborsOfVertices[i][j]);
-			}
-			else {
-				for (int k = 0; k < connected.size(); ++k) {
-					for (int l = 0; l < connected[k].size(); ++l) {
-						if (listCheck(connected[k], triangleNeighborsOfVertices[i][j]) == 0) {
-
-						}
-					}
-				}
-			}
+	for (unsigned int i = 0; i < m.vertices.size(); ++i) {
+		if (alreadyDone[i] == 0) {
+			fill(newComponent.begin(), newComponent.end(), 0);
+			addToComponent(newComponent, alreadyDone, i);
+			Components.push_back(newComponent);
 		}
 	}
+
+	for (unsigned int i = 0; i < Components.size(); ++i) {
+		Components[i] = simplifyComponents(Components[i]);
+	}
+}
+
+vector<int> simplifyComponents(vector<int>& component) {
+	vector<int> newComponent;
+	for (unsigned int i = 0; i < component.size(); ++i) {
+		if (component[i] == 0) {
+			newComponent.push_back(i);
+		}
+	}
+	return newComponent;
+}
+
+void addToComponent(vector<int>& Component, vector<int>& alreadyDone, int vertex) {
+	Component[vertex] = 1;
+	alreadyDone[vertex] = 1;
+	for (unsigned int i = 0; i < vertexNeighborsOfVertices[vertex].size(); ++i) {
+		if (Component[vertexNeighborsOfVertices[vertex][i]] == 0) {
+			addToComponent(Component, alreadyDone, vertexNeighborsOfVertices[vertex][i]);
+		}
+	}
+}
+
+
+
+
+
+
+	
+	
+	
 
 
 
@@ -469,7 +507,7 @@ void connectTriangles(Mesh& m) {
 
 
 	
-}
+
 
 int listCheck(vector<int> checklist, int toBeChecked) {
 	int check = 0;
@@ -480,5 +518,32 @@ int listCheck(vector<int> checklist, int toBeChecked) {
 		else continue;
 	}
 	return check;
+}
+
+void colorComponents(Mesh& m) {
+	int nrOfComponent = 0;
+	fill(colors.begin(), colors.end(), 0);
+	for (unsigned int i = 0; i <Components.size(); ++i) {
+		if (unsigned int j = 0; j < Components[i].size(); ++j) {
+			if ((nrOfComponent+1)%6 == 0) {
+				colors[Components[i][j]] = (1, 0, 0);
+			}
+			else if ((nrOfComponent + 1) % 6 == 1) {
+				colors[Components[i][j]] = (1, 0, 0);
+			}
+			else if ((nrOfComponent + 1) % 6 == 2) {
+				colors[Components[i][j]] = (1, 0, 0);
+			}
+			else if ((nrOfComponent + 1) % 6 == 3) {
+				colors[Components[i][j]] = (1, 0, 0);
+			}
+			else if ((nrOfComponent + 1) % 6 == 4) {
+				colors[Components[i][j]] = (1, 0, 0);
+			}
+			else {
+				colors[Components[i][j]] = (1, 0, 0);
+			}
+		}
+	}
 }
 
