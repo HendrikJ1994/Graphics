@@ -98,17 +98,74 @@ Vec3Df debugColor(unsigned int index)
 //
 Vec3Df diffuseOnly(const Vec3Df & vertexPos, Vec3Df & normal, const Vec3Df & lightPos, unsigned int index)
 {	
-	return Vec3Df(1,0,0);
+	///////____lambertian shading_____//////////////
+	Vec3Df lightDirection = lightPos - vertexPos;
+	Vec3Df normalEndpoint = normal ;
+	lightDirection.normalize();
+
+	float dotProduct = Vec3Df:: dotProduct(normal, lightDirection);
+
+	if (dotProduct < 0) {
+		dotProduct = 0;
+	}
+	float red = Kd[index][0] * dotProduct;
+	float green = Kd[index][1] * dotProduct;
+	float blue = Kd[index][2] * dotProduct;
+
+	//std::cout << vector << endl;
+
+	return Vec3Df (red, green, blue);
 }
 
 
 //Phong (!) Shading Specularity (http://en.wikipedia.org/wiki/Blinn%E2%80%93Phong_shading_model)
-//Follow the course, only calculate Ks pow(dot(V,R),shininess), where V is the view vector and R is the Reflection vector of the light (like in pool billard computed from the LightPos, vertexPos and normal).
+//Follow the course, only calculate Ks pow(dot(V,R),shininess), where V is the view vector and R 
+//is the Reflection vector of the light (like in pool billard computed from the LightPos, vertexPos and normal).
 //When computing specularities like this, verify that the light is on the right side of the surface, with respect to the normal
 //E.g., for a plane, the light source below the plane cannot cast light on the top, hence, there can also not be any specularity. 
 Vec3Df phongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, const Vec3Df & lightPos, const Vec3Df & cameraPos, unsigned int index)
 {
-	return Vec3Df(0,1,0);
+	// R is undefined Reflection vector
+	int shininess = 50;
+	float red = 0, green = 0, blue = 0;
+	Vec3Df b = cameraPos - vertexPos;	//camera pos vector
+	Vec3Df c = lightPos - vertexPos;	//light vector
+
+	float angleCameraNormal = Vec3Df::dotProduct(normal, b);
+	float angleLightNormal = Vec3Df::dotProduct(normal, c);
+	float dotProduct = 0;
+
+	if (angleCameraNormal <= 0 || angleLightNormal <= 0) {
+		dotProduct = 0;
+	}
+	else {
+		Vec3Df L = lightPos - vertexPos;
+		Vec3Df V = cameraPos - vertexPos; //view vector
+		Vec3Df R = 2 * (L*normal)*normal - L;
+
+		R.normalize();
+		V.normalize();
+
+		dotProduct = pow(Vec3Df::dotProduct(R, V), shininess);
+
+	}
+	
+
+	if (dotProduct < 0) {
+		dotProduct = 0;
+	}
+
+	/*float temp = dotProduct;
+	for (int i = 0; i < 10; ++i) {
+		dotProduct = dotProduct*temp;
+	}*/
+
+	red = Ks[index][0] * dotProduct;
+	green = Ks[index][1] * dotProduct;
+	blue = Ks[index][2] * dotProduct;
+
+
+	return Vec3Df(red, green, blue);
 }
 
 //Blinn-Phong Shading Specularity (http://en.wikipedia.org/wiki/Blinn%E2%80%93Phong_shading_model)
@@ -117,7 +174,47 @@ Vec3Df phongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, const Vec3Df
 //The same test as before should be used
 Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, const Vec3Df & lightPos, const Vec3Df & cameraPos, unsigned int index)
 {
-	return Vec3Df(0,0,1);
+	int shininess = 10;
+	Vec3Df L = lightPos - vertexPos;
+	Vec3Df V = cameraPos - vertexPos; //view vector
+
+	Vec3Df normalEndVector = normal + vertexPos; //normal end point
+	//Vec3Df b = cameraPos - vertexPos;	//camera pos vector
+	Vec3Df c = lightPos - vertexPos;	//light vector
+
+	float angleCameraNormal = Vec3Df::dotProduct(normal, V);
+	float angleLightNormal = Vec3Df::dotProduct(normal, L);
+	float dotProduct = 0;
+
+	if (angleCameraNormal <= 0 || angleLightNormal <= 0) {
+		dotProduct = 0;
+	}
+	else {
+
+		L.normalize();
+		V.normalize();
+
+		Vec3Df H = L + V;
+		H.normalize();
+		dotProduct = pow(Vec3Df::dotProduct(normal, H), shininess);
+	}
+
+	
+
+	if (dotProduct < 0) {
+		dotProduct = 0;
+	}
+	/*float temp = dotProduct;
+	for (int i = 0; i < 100; ++i) {
+		dotProduct = dotProduct*temp;
+	}
+	*/
+	float red = Ks[index][0] * dotProduct;
+	float green = Ks[index][1] * dotProduct;
+	float blue = Ks[index][2] * dotProduct;
+
+
+	return Vec3Df(red, green, blue);
 }
 
 
@@ -127,7 +224,8 @@ Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, const V
 //use the variable ToonDiscretize.
 //Normal diffuse shading has values between 0 and Kd (the diffuse coefficient).
 //In toon shading, these values are discretized.
-//This means, there are N (ToonDiscretize) uniform intervals between 0 and Kd - in this example, we assume a single color channel, you should use the values from the vector Kd 
+//This means, there are N (ToonDiscretize) uniform intervals between 0 and Kd - in this example, we assume a single color channel,
+//you should use the values from the vector Kd 
 //Let c(0)=0, c(1) ...c(N), c(N+1)=Kd be the boundary values of these intervals.
 //For a value v in [c(i), c(i+1)), the function should return (c(i)+c(i+1))/2.
 //For v=Kd, return (c(N)+c(N+1))/2, else 0.
