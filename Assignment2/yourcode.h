@@ -126,7 +126,7 @@ Vec3Df diffuseOnly(const Vec3Df & vertexPos, Vec3Df & normal, const Vec3Df & lig
 Vec3Df phongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, const Vec3Df & lightPos, const Vec3Df & cameraPos, unsigned int index)
 {
 	// R is undefined Reflection vector
-	int shininess = 50;
+	int shininess = 40;
 	float red = 0, green = 0, blue = 0;
 	Vec3Df b = cameraPos - vertexPos;	//camera pos vector
 	Vec3Df c = lightPos - vertexPos;	//light vector
@@ -155,10 +155,6 @@ Vec3Df phongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, const Vec3Df
 		dotProduct = 0;
 	}
 
-	/*float temp = dotProduct;
-	for (int i = 0; i < 10; ++i) {
-		dotProduct = dotProduct*temp;
-	}*/
 
 	red = Ks[index][0] * dotProduct;
 	green = Ks[index][1] * dotProduct;
@@ -180,19 +176,18 @@ Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, const V
 
 	Vec3Df normalEndVector = normal + vertexPos; //normal end point
 	//Vec3Df b = cameraPos - vertexPos;	//camera pos vector
-	Vec3Df c = lightPos - vertexPos;	//light vector
+	//Vec3Df c = lightPos - vertexPos;	//light vector
 
-	float angleCameraNormal = Vec3Df::dotProduct(normal, V);
-	float angleLightNormal = Vec3Df::dotProduct(normal, L);
+	float angleCameraNormal = Vec3Df::dotProduct(normal, V); //if the angle between the camera and the normal is > 90 than the camera is beneath the surface so it should be dark
+	float angleLightNormal = Vec3Df::dotProduct(normal, L); // if the light engle is beneath the surface it sould be dark
 	float dotProduct = 0;
 
 	if (angleCameraNormal <= 0 || angleLightNormal <= 0) {
 		dotProduct = 0;
 	}
 	else {
-
-		L.normalize();
-		V.normalize();
+		//L.normalize();
+		//V.normalize();
 
 		Vec3Df H = L + V;
 		H.normalize();
@@ -204,11 +199,7 @@ Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, const V
 	if (dotProduct < 0) {
 		dotProduct = 0;
 	}
-	/*float temp = dotProduct;
-	for (int i = 0; i < 100; ++i) {
-		dotProduct = dotProduct*temp;
-	}
-	*/
+
 	float red = Ks[index][0] * dotProduct;
 	float green = Ks[index][1] * dotProduct;
 	float blue = Ks[index][2] * dotProduct;
@@ -231,7 +222,32 @@ Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, const V
 //For v=Kd, return (c(N)+c(N+1))/2, else 0.
 Vec3Df toonShadingNoSpecular(const Vec3Df & vertexPos, Vec3Df & normal, const Vec3Df & lightPos, unsigned int index)
 {
-	return Vec3Df(0.5,0.5,0);
+	//float red, green, blue;
+	Vec3Df lightDiffusion = diffuseOnly(vertexPos, normal, lightPos, index);
+	std::vector<float> c;
+	int N = ToonDiscretize;
+	Vec3Df color;
+	c.resize(ToonDiscretize + 2);
+	c[0] = 0;
+
+	for (int i = 0; i <= 2; ++i) {
+		for (int j = 1; j < N + 2; ++j) {
+			c[j] = (j*Kd[index][i]) / (N + 1);			
+		}
+		//std::cout << i<< endl;
+		color[i] = 0;
+		for (int j = 0; j < N + 1; ++j) {
+			
+			if (Kd[index][i] == lightDiffusion[i]) {
+				color[i] = (c[N] + c[N + 1]) / 2;
+			}
+			else if (c[j] < lightDiffusion[i] && lightDiffusion[i]< c[j + 1]) {
+				color[i] = (c[j] + c[j + 1]) / 2;
+			}
+			else continue;
+		}
+	}
+	return color;
 }
 
 //Toon shading specularity
@@ -239,7 +255,16 @@ Vec3Df toonShadingNoSpecular(const Vec3Df & vertexPos, Vec3Df & normal, const Ve
 //If a channel of Blinn-Phong Specularity has a value bigger or equal to ToonSpecularThreshold, then set it to 1, else to 0.
 Vec3Df toonShadingOnlySpecular(const Vec3Df & vertexPos, Vec3Df & normal, const Vec3Df & lightPos, const Vec3Df & cameraPos, unsigned int index)
 {
-	return Vec3Df(0,0,1);
+	Vec3Df color = blinnPhongSpecularOnly(vertexPos, normal, lightPos, cameraPos, index);
+	for (int i = 0; i <= 2; ++i) {
+		if (color[i] <ToonSpecularThreshold) {
+			color[i] = 0;
+		}
+		else {
+			color[i] = 1.0;
+		}
+	}
+	return color;
 }
 
 
