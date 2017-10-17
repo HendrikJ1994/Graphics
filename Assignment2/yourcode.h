@@ -1,5 +1,6 @@
 #include <vector>
 #include "mesh.h"
+#include <math.h>
 
 //THIS IS THE ONLY FILE YOU NEED TO MODIFY and SUBMIT!!! NOTHING ELSE!!!
 //Please RENAME as described below and then send it to assignments.eisemann@gmail.com 
@@ -275,8 +276,21 @@ Vec3Df userInteractionSphere(const Vec3Df & selectedPos, const Vec3Df & camPos)
 {
 	//RETURN the new light position, defined as follows.
 	//selectedPos is a location on the mesh. Use this location to place the light source to cover the location as seen from camPos.
-	//Further, the light should be at a distance of 1.5 from the origin of the scene - in other words, located on a sphere of radius 1.5 around the origin.
-	return Vec3Df(1,1,1);
+	//Further, the light should be at a distance of 1.5 from the origin of the scene - in other words, located on a sphere of radius 
+	//1.5 around the origin.
+	Vec3Df result;
+	float r = 1.5;
+	Vec3Df direction = camPos - selectedPos;
+	float distanceCamerea = camPos.getLength();
+	float ratio = r / direction.getLength();
+	std::cout<<Vec3Df::dotProduct(selectedPos, camPos)<<endl;
+	result[0] = direction[0] * ratio;
+	result[1] = direction[1] * ratio;
+	result[2] = direction[2] * ratio;
+
+	std::cout << result.getLength() << endl;
+
+	return result;
 }
 
 Vec3Df userInteractionShadow(const Vec3Df & selectedPos, const Vec3Df & selectedNormal, const Vec3Df & lightPos)
@@ -285,6 +299,8 @@ Vec3Df userInteractionShadow(const Vec3Df & selectedPos, const Vec3Df & selected
 	//--- in this way, the shading boundary will be exactly at this location.
 	//there are several ways to do this, choose one you deem appropriate given the current light position
 	//no panic, I will not judge what solution you chose, as long as the above condition is met.
+
+
 	return Vec3Df(1,0,1);
 }
 
