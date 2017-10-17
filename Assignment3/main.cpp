@@ -12,7 +12,7 @@ you should implement.
 #include "myFunctions.h"
 
 Mesh myMesh;
-bool wireFrameMode = true;
+bool wireFrameMode = false;
 
 /* Function that gets called
  from the OpenGL main loop
@@ -97,12 +97,16 @@ void init(int argc, char ** argv) {
 	glutKeyboardFunc(keyboard);
 
     glEnable( GL_DEPTH_TEST );
-    glShadeModel(GL_SMOOTH);
+    glShadeModel(GL_FLAT);
 
     glClearColor (0.0, 0.0, 0.0, 0.0);
     glClear( GL_COLOR_BUFFER_BIT  | GL_DEPTH_BUFFER_BIT);
 
 	if (wireFrameMode) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	GLfloat lightPos[] = {0, 1.0, 1.0, 0};
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 }
 
 /** Initialize and then go straight
