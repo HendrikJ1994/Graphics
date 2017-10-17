@@ -278,19 +278,21 @@ Vec3Df userInteractionSphere(const Vec3Df & selectedPos, const Vec3Df & camPos)
 	//selectedPos is a location on the mesh. Use this location to place the light source to cover the location as seen from camPos.
 	//Further, the light should be at a distance of 1.5 from the origin of the scene - in other words, located on a sphere of radius 
 	//1.5 around the origin.
-	Vec3Df result;
+	Vec3Df lightPos;
 	float r = 1.5;
-	Vec3Df direction = camPos - selectedPos;
-	float distanceCamerea = camPos.getLength();
-	float ratio = r / direction.getLength();
-	std::cout<<Vec3Df::dotProduct(selectedPos, camPos)<<endl;
-	result[0] = direction[0] * ratio;
-	result[1] = direction[1] * ratio;
-	result[2] = direction[2] * ratio;
-
-	std::cout << result.getLength() << endl;
-
-	return result;
+	Vec3Df distance = camPos - selectedPos;
+	float a = distance.getSquaredLength();
+	float b = 2 * Vec3Df::dotProduct(selectedPos, distance);
+	float c = selectedPos.getSquaredLength() - pow(r, 2);
+	float lambda1 = (-b + sqrt(pow(b, 2) - (4 * a*c))) / (2 * a);
+	float lambda2 = (-b - sqrt(pow(b, 2) - (4 * a*c))) / (2 * a);
+	if (lambda1 > 0) {
+		lightPos = lambda1*distance + selectedPos;
+	}
+	else if(lambda2 > 0) {
+		lightPos = lambda2*distance + selectedPos;
+	}
+	return lightPos;
 }
 
 Vec3Df userInteractionShadow(const Vec3Df & selectedPos, const Vec3Df & selectedNormal, const Vec3Df & lightPos)
@@ -300,8 +302,11 @@ Vec3Df userInteractionShadow(const Vec3Df & selectedPos, const Vec3Df & selected
 	//there are several ways to do this, choose one you deem appropriate given the current light position
 	//no panic, I will not judge what solution you chose, as long as the above condition is met.
 
-
-	return Vec3Df(1,0,1);
+	double dotProd = Vec3Df::dotProduct(selectedNormal, lightPos-selectedPos);
+	double cosine = dotProd / (selectedNormal.getLength() * lightPos.getLength());
+	Vec3Df proj = (lightPos.getLength()*cosine) * selectedNormal;
+	Vec3Df orthogonal = ((proj - lightPos) + selectedPos)*1.5;
+	return orthogonal;
 }
 
 Vec3Df userInteractionSpecular(const Vec3Df & selectedPos, const Vec3Df & selectedNormal, const Vec3Df & lightPos, const Vec3Df & cameraPos)
@@ -310,5 +315,12 @@ Vec3Df userInteractionSpecular(const Vec3Df & selectedPos, const Vec3Df & select
 	//please ensure also that the light is at a distance of 1 from selectedpos! If the camera is on the wrong side of the surface (normal pointing the other way),
 	//then just return the original light position.
 	//There is only ONE way of doing this!
-	return Vec3Df(0,1,1);
+	Vec3Df d = selectedPos - cameraPos;
+	Vec3Df n = selectedNormal;
+	n.normalize();
+	Vec3Df r = d - 2 * Vec3Df::dotProduct(d, n) * n;
+	r.normalize();
+	Vec3Df result = r + selectedPos;
+
+	return result;
 }
