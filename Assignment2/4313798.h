@@ -256,6 +256,7 @@ Vec3Df toonShadingNoSpecular(const Vec3Df & vertexPos, Vec3Df & normal, const Ve
 //If a channel of Blinn-Phong Specularity has a value bigger or equal to ToonSpecularThreshold, then set it to 1, else to 0.
 Vec3Df toonShadingOnlySpecular(const Vec3Df & vertexPos, Vec3Df & normal, const Vec3Df & lightPos, const Vec3Df & cameraPos, unsigned int index)
 {
+
 	Vec3Df color = blinnPhongSpecularOnly(vertexPos, normal, lightPos, cameraPos, index);
 	for (int i = 0; i <= 2; ++i) {
 		if (color[i] <ToonSpecularThreshold) {
